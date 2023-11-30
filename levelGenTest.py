@@ -17,7 +17,8 @@ FPS = 60
 
 GRAVITY = 1.2
 ROWS = 16
-COLS = 26
+COLS = 150
+MAX_LEVELS = 2 
 TILE_SIZE = SCREEN_HEIGHT // ROWS
 TILE_TYPES = 21
 level = 1
@@ -41,6 +42,18 @@ BLACK = (0, 0, 0)
 
 def draw_bg():
 	screen.fill(BG)
+
+def reset_level():
+
+	exit_group.empty()
+
+	#create empty tile list
+	data = []
+	for row in range(ROWS):
+		r = [-1] * COLS
+		data.append(r)
+
+	return data
 
 
 class Soldier(pygame.sprite.Sprite):
@@ -103,7 +116,14 @@ class Soldier(pygame.sprite.Sprite):
 		self.vel_y += GRAVITY
 		if self.vel_y > 10:
 			self.vel_y
+			self.jump = False 
+			self.in_air = True
 		dy += self.vel_y
+
+		level_complete = False
+		if pygame.sprite.spritecollide(self, exit_group, False):
+			
+			level_complete = True
 
 		for tile in world.obstacle_list:
 			if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
@@ -121,6 +141,8 @@ class Soldier(pygame.sprite.Sprite):
 
 		self.rect.x += dx
 		self.rect.y += dy
+
+		return level_complete
 
 
 
@@ -235,6 +257,20 @@ while run:
 	else:
 		player.update_action(0)
 	player.move(moving_left, moving_right)
+
+	level_complete = player.move(moving_left, moving_right)
+	if level_complete:
+				level += 1
+				world_data = reset_level()
+				if level <= MAX_LEVELS:
+					#load in level data and create world
+					with open(f'level{level}_data.csv', newline='') as csvfile:
+						reader = csv.reader(csvfile, delimiter=',')
+						for x, row in enumerate(reader):
+							for y, tile in enumerate(row):
+								world_data[x][y] = int(tile)
+					world = World()
+					player = world.process_data(world_data)	
 
 
 	for event in pygame.event.get():
