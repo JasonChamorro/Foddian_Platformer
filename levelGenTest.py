@@ -15,7 +15,7 @@ pygame.display.set_caption('Shooter')
 clock = pygame.time.Clock()
 FPS = 60
 
-GRAVITY = 1.2
+GRAVITY = 0.6
 ROWS = 16
 COLS = 150
 MAX_LEVELS = 2 
@@ -57,7 +57,7 @@ def reset_level():
 
 
 class Soldier(pygame.sprite.Sprite):
-	def __init__(self, char_type, x, y, scale, speed, ammo, grenades):
+	def __init__(self, char_type, x, y, scale, speed):
 		pygame.sprite.Sprite.__init__(self)
 		self.char_type = char_type
 		self.speed = speed
@@ -108,7 +108,7 @@ class Soldier(pygame.sprite.Sprite):
 			self.direction = 1
 
 		if self.jump == True and self.in_air == False:
-			self.vel_y = -17
+			self.vel_y = -13
 			self.jump = False
 			self.in_air = True
 		
@@ -189,7 +189,7 @@ class World():
 					if tile >= 0 and tile <= 8:
 						self.obstacle_list.append(tile_data)
 					elif tile == 15:#create player
-						player = Soldier('player', x * TILE_SIZE, y * TILE_SIZE, 1.65, 5, 20, 5)
+						player = Soldier('player', x * TILE_SIZE, y * TILE_SIZE, 1.65, 3)
 					elif tile == 20:#create exit
 						exit = Exit(img, x * TILE_SIZE, y * TILE_SIZE)
 						exit_group.add(exit)
@@ -285,6 +285,16 @@ while run:
 				player.jump = True
 			if event.key == pygame.K_ESCAPE:
 				run = False
+			if event.key == pygame.K_r:
+				world_data = reset_level()
+				with open(f'level{level}_data.csv', newline='') as csvfile:
+					reader = csv.reader(csvfile, delimiter=',')
+					for x, row in enumerate(reader):
+						for y, tile in enumerate(row):
+							world_data[x][y] = int(tile)
+				world = World()
+				player = world.process_data(world_data)	
+
 
 
 		if event.type == pygame.KEYUP:
