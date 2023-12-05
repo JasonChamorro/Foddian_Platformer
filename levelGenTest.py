@@ -61,7 +61,7 @@ class Soldier(pygame.sprite.Sprite):
 		pygame.sprite.Sprite.__init__(self)
 		self.char_type = char_type
 		self.speed = speed
-
+		
 		self.direction = 1
 		self.vel_y = 0
 		self.jump = False
@@ -83,7 +83,8 @@ class Soldier(pygame.sprite.Sprite):
 			self.animation_list.append(temp_list)
 
 		self.image = self.animation_list[self.action][self.frame_index]
-		self.rect = self.image.get_rect()
+		#self.rect = self.image.get_rect()
+		self.rect = self.image.get_rect(topleft=(x, y))
 		self.rect.center = (x, y)
 		self.width = self.image.get_width()
 		self.height = self.image.get_height()
@@ -170,6 +171,57 @@ class Soldier(pygame.sprite.Sprite):
 
 	def draw(self):
 		screen.blit(pygame.transform.flip(self.image, self.flip, False), self.rect)
+	
+
+	def shoot(self):
+		if moving_left:
+			return(Bullet(self.rect.topleft[0], self.rect.topleft[1], 10, 0, 1))
+		else:
+			return(Bullet(self.rect.topleft[0], self.rect.topleft[1], 10, 0, 0))
+
+		
+
+
+
+
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self,pos_x,pos_y, speed, drop, direction):
+        super().__init__()
+        self.direction = direction
+        self.speed = speed
+        self.drop = drop
+        self.image = pygame.Surface([25,25])
+        self.image.fill((255,0,0))
+        self.rect = self.image.get_rect(center =(pos_x, pos_y))
+    
+    def update(self):
+		
+        if self.direction == 0:
+            self.rect.x += self.speed
+        elif self.direction == 1:
+            self.rect.x -= self.speed
+        self.rect.y -= self.drop #change this to have arc affect 
+#'''
+class Enemy(pygame.sprite.Sprite):
+	#for final game marcus put this in terms of tiles
+	def __init__(self, alive,x,y):
+		super().__init__()
+		self.alive = alive #will be true or false
+		self.image = pygame.Surface([50,50])
+		self.image.fill((255,255,255))
+		self.rect = self.image.get_rect(center = (x,y))
+
+	
+	def update(self):
+		if pygame.sprite.spritecollide(self, bullet_group, True):
+			self.image.fill((255,10,10))
+			self.alive = False
+			
+
+
+
+#'''
+
 
 
 class World():
@@ -215,6 +267,8 @@ class Exit(pygame.sprite.Sprite):
 
 
 exit_group = pygame.sprite.Group()
+bullet_group = pygame.sprite.Group()
+enemy_group = pygame.sprite.Group()
 
 
 #create empty tile list
@@ -233,6 +287,7 @@ player = world.process_data(world_data)
 
 
 
+#game run loop
 run = True
 while run:
 
@@ -249,6 +304,11 @@ while run:
 	#update and draw groups
 	exit_group.update()
 	exit_group.draw(screen)
+	bullet_group.update()
+	bullet_group.draw(screen)
+	enemy_group.update()
+	enemy_group.draw(screen)
+	
 
 	if player.in_air:
 		player.update_action(2)
@@ -257,6 +317,7 @@ while run:
 	else:
 		player.update_action(0)
 	player.move(moving_left, moving_right)
+	
 
 	level_complete = player.move(moving_left, moving_right)
 	if level_complete:
@@ -277,6 +338,10 @@ while run:
 		if event.type == pygame.QUIT:
 			run = False
 		if event.type == pygame.KEYDOWN:
+			if event.key == pygame.K_t:
+				enemy_group.add(Enemy(True, random.randint(250,750),random.randint(450,550)))
+			if event.key == pygame.K_SPACE:
+				bullet_group.add(player.shoot())
 			if event.key == pygame.K_a:
 				moving_left = True
 			if event.key == pygame.K_d:
