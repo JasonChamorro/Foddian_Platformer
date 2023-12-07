@@ -174,10 +174,10 @@ class Soldier(pygame.sprite.Sprite):
 	
 
 	def shoot(self):
-		if moving_left:
-			return(Bullet(self.rect.topleft[0], self.rect.topleft[1], 10, 0, 1))
+		if self.direction == -1:
+			return(Bullet(self.rect.center[0], self.rect.center[1], 10, 0, 1))
 		else:
-			return(Bullet(self.rect.topleft[0], self.rect.topleft[1], 10, 0, 0))
+			return(Bullet(self.rect.center[0], self.rect.center[1], 10, 0, 0))
 
 		
 
@@ -229,7 +229,7 @@ class World():
 		self.obstacle_list = []
 
 	def process_data(self, data):
-		#iterate through each value in level data file
+		#parse each value in level data file
 		for y, row in enumerate(data):
 			for x, tile in enumerate(row):
 				if tile >= 0:
@@ -241,7 +241,7 @@ class World():
 					if tile >= 0 and tile <= 8:
 						self.obstacle_list.append(tile_data)
 					elif tile == 15:#create player
-						player = Soldier('player', x * TILE_SIZE, y * TILE_SIZE, 1.65, 3)
+						player = Soldier('player', x * TILE_SIZE, y * TILE_SIZE, 1.65, 4)
 					elif tile == 20:#create exit
 						exit = Exit(img, x * TILE_SIZE, y * TILE_SIZE)
 						exit_group.add(exit)
