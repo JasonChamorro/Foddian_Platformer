@@ -79,14 +79,14 @@ class Soldier(pygame.sprite.Sprite):
 		self.jump = False
 		self.in_air = True
 		self.flip = False
+		self.shoot_time = 0
 		self.animation_list = []
 		self.frame_index = 0
 		self.action = 0
 		self.update_time = pygame.time.get_ticks()
-
-
-		#Player animation for moving, standing still, and jumping 
-		animation_types = ['Idle', 'Run', 'Jump']
+    
+		#Player animation for moving, standing still, jumping, and shooting
+		animation_types = ['Idle', 'Run', 'Jump', 'Shoot']
 		for animation in animation_types:
 			temp_list = []
 			num_of_frames = len(os.listdir(f'img/{self.char_type}/{animation}'))
@@ -225,6 +225,7 @@ class Soldier(pygame.sprite.Sprite):
 	
 
 	def shoot(self):
+		self.shoot_time = pygame.time.get_ticks()
 		if self.direction == -1:
 			return(Bullet(self.rect.center[0], self.rect.center[1], 10, 0, 1, DARK_GREEN))
 		else:
@@ -264,27 +265,70 @@ class Bullet(pygame.sprite.Sprite):
 
 class Enemy(pygame.sprite.Sprite):
 
-	def __init__(self, alive,x,y,facing,shoot_interval, on_level):
+	def __init__(self, alive,x,y,facing,shoot_interval, on_level, char_type):
 		super().__init__()
+
+		self.char_type = char_type
+
 		self.alive = alive #will be true or false
-		self.image = pygame.Surface([50,50])
-		self.image.fill((255,255,255))
-		self.rect = self.image.get_rect(center = (x,y))
+		# self.image = pygame.Surface([50,50])
+		# self.image.fill((255,255,255))
+		# self.rect = self.image.get_rect(center = (x,y))
 		self.facing = facing
 		self.shoot_interval = shoot_interval
 		self.shoot_timer = 0
+		self.shooting = False
 		self.last_shot = 0
 		self.on_level = on_level
 		self.start_pos_x = x
 		self.start_pos_y = y
 
+		self.animation_list = []
+		self.frame_index = 0
+		self.action = 0
+		self.update_time = pygame.time.get_ticks()
+
+		animation_types = ['idle', 'idle reverse', 'not alive', 'not alive reverse']
+		for animation in animation_types:
+			temp_list = []
+			num_of_frames = len(os.listdir(f'img/{self.char_type}/{animation}'))
+			for i in range(num_of_frames):
+				img = pygame.image.load(f'img/{self.char_type}/{animation}/{i}.png').convert_alpha()
+				img = pygame.transform.scale(img, (int(img.get_width() * 1.65), int(img.get_height() * 1.65)))
+				temp_list.append(img)
+				print(temp_list)
+			self.animation_list.append(temp_list)
+
+		self.image = self.animation_list[self.action][self.frame_index]
+		#self.rect = self.image.get_rect()
+		self.rect = self.image.get_rect(topleft=(x, y))
+		self.rect.center = (x, y)
+		self.width = self.image.get_width()
+		self.height = self.image.get_height()
+
+	def update_animation(self):
+		ANIMATION_COOLDOWN = 100
+		self.image = self.animation_list[self.action][self.frame_index]
+		if pygame.time.get_ticks() - self.update_time > ANIMATION_COOLDOWN:
+			self.update_time = pygame.time.get_ticks()
+			self.frame_index += 1
+		if self.frame_index >= len(self.animation_list[self.action]):
+			if self.action == 3:
+				self.frame_index = len(self.animation_list[self.action]) - 1
+			else:
+				self.frame_index = 0
+
+	def update_action(self, new_action):
+		if new_action != self.action:
+			self.action = new_action
+			self.frame_index = 0
+			self.update_time = pygame.time.get_ticks()
+
 	def shoot(self):
 		
 		if self.facing == "left":
-
 			return(enemy_bullet_group.add(Bullet(self.rect.center[0], self.rect.center[1], 10, 0, 1, BLACK)))
 		else:
-
 			return(enemy_bullet_group.add(Bullet(self.rect.center[0], self.rect.center[1], 10, 0, 0, BLACK)))
 	
 	def hide_me(self):
@@ -297,23 +341,29 @@ class Enemy(pygame.sprite.Sprite):
 
 	
 	def update(self):
+		self.update_animation()
 		if pygame.sprite.spritecollide(self, player_bullet_group, True):
-			self.image.fill((255,10,10))
 			self.alive = False
 		if self.alive == True:
+			if self.facing == 'left':
+				self.update_action(1)
+			else:
+				self.update_action(0)
 			current_time = pygame.time.get_ticks()
 			self.shoot_timer += current_time - self.last_shot
 			if self.shoot_timer >= self.shoot_interval:
 				self.shoot()
 				self.shoot_timer = 0
 				self.last_shot = current_time
+		else:
+			if self.facing == 'left':
+				self.update_action(3)
+			else:
+				self.update_action(2)
 		if level == self.on_level:
 			self.show_me()
 		elif level != self.on_level:
 			self.hide_me()
-
-		
-	
 			
 
 
@@ -370,25 +420,24 @@ exit_group = pygame.sprite.Group()
 player_bullet_group = pygame.sprite.Group()
 enemy_bullet_group = pygame.sprite.Group()
 enemy_group = pygame.sprite.Group()
+
 #enemy_group.add(Enemy(Alive, X, Y ,Facing,  Fire rate higher is slower, level))
-enemy_group.add(Enemy(True, 700, 550 ,"left", 100000, 1))
-enemy_group.add(Enemy(True, 40, 240 ,"right", 10000, 1))
+enemy_group.add(Enemy(True, 700, 550 ,"left", 100000, 1, 'enemy'))
+enemy_group.add(Enemy(True, 40, 240 ,"right", 10000, 1, 'enemy'))
 
-enemy_group.add(Enemy(True, 700, 350 ,"left", 10000, 2))
+enemy_group.add(Enemy(True, 700, 350 ,"left", 10000, 2, 'enemy'))
 
-enemy_group.add(Enemy(True, 700, 450 ,"left", 1000, 3))
+enemy_group.add(Enemy(True, 700, 450 ,"left", 1000, 3, 'enemy'))
 
-enemy_group.add(Enemy(True, 700, 450 ,"left", 1000, 4))
+enemy_group.add(Enemy(True, 700, 450 ,"left", 1000, 4, 'enemy'))
 
-enemy_group.add(Enemy(True, 50, 250 ,"right", 100000, 5))
-enemy_group.add(Enemy(True, 700, 200 ,"left", 10000, 5))
-enemy_group.add(Enemy(True, 50, 250 ,"right", 10000, 5))
-enemy_group.add(Enemy(True, 700, 300 ,"left", 100000, 5))
-enemy_group.add(Enemy(True, 50, 350 ,"right", 10000, 5))
-enemy_group.add(Enemy(True, 700, 400 ,"left", 100000, 5))
-enemy_group.add(Enemy(True, 50, 450 ,"right", 10000, 5))
-
-
+enemy_group.add(Enemy(True, 50, 250 ,"right", 100000, 5, 'enemy'))
+enemy_group.add(Enemy(True, 700, 200 ,"left", 10000, 5, 'enemy'))
+enemy_group.add(Enemy(True, 50, 250 ,"right", 10000, 5, 'enemy'))
+enemy_group.add(Enemy(True, 700, 300 ,"left", 100000, 5, 'enemy'))
+enemy_group.add(Enemy(True, 50, 350 ,"right", 10000, 5, 'enemy'))
+enemy_group.add(Enemy(True, 700, 400 ,"left", 100000, 5, 'enemy'))
+enemy_group.add(Enemy(True, 50, 450 ,"right", 10000, 5, 'enemy'))
 
 
 
@@ -414,6 +463,9 @@ while run:
 
 	clock.tick(FPS)
 
+	time_elapsed = pygame.time.get_ticks()
+
+
 	#update background
 	draw_bg()
 	#draw world map
@@ -431,16 +483,22 @@ while run:
 	enemy_bullet_group.draw(screen)
 	enemy_group.update()
 	enemy_group.draw(screen)
-	
-	
+
+	if time_elapsed - player.shoot_time < 200:
+		player.shooting = True
+	else:
+		player.shooting = False
 
 	if player.in_air:
 		player.update_action(2)
 	elif moving_left or moving_right:
 		player.update_action(1)
+	elif player.shooting == True:
+		player.update_action(3)
 	else:
 		player.update_action(0)
 	player.move(moving_left, moving_right)
+
 	
 
 	level_complete = player.move(moving_left, moving_right)
