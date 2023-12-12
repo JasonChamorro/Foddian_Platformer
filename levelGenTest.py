@@ -61,7 +61,7 @@ class Soldier(pygame.sprite.Sprite):
 		pygame.sprite.Sprite.__init__(self)
 		self.char_type = char_type
 		self.speed = speed
-
+		
 		self.direction = 1
 		self.vel_y = 0
 		self.jump = False
@@ -83,7 +83,8 @@ class Soldier(pygame.sprite.Sprite):
 			self.animation_list.append(temp_list)
 
 		self.image = self.animation_list[self.action][self.frame_index]
-		self.rect = self.image.get_rect()
+		#self.rect = self.image.get_rect()
+		self.rect = self.image.get_rect(topleft=(x, y))
 		self.rect.center = (x, y)
 		self.width = self.image.get_width()
 		self.height = self.image.get_height()
@@ -91,6 +92,33 @@ class Soldier(pygame.sprite.Sprite):
 
 	def update(self):
 		self.update_animation()
+		
+		for pewpew in enemy_bullet_group:
+			
+			if pygame.sprite.collide_rect(self, pewpew):
+				
+				#marcus movement hard make them go to left or right when they are shot :)
+				#also we have a bug that I am just gonna say is a feature, if you are jumping when you get shot it 
+				#doesn't make you jump in air again, but we can just say that is like a parry or something, will add more 
+				#skill to the game
+
+
+
+				self.vel_y = -10
+
+				if pewpew.direction == 0:
+					
+					#Getting shot from the left
+					pewpew.kill()
+				elif pewpew.direction == 1:
+					
+					#Getting shot from the right
+					pewpew.kill()
+					
+			
+			
+				
+
 
 
 
@@ -170,6 +198,102 @@ class Soldier(pygame.sprite.Sprite):
 
 	def draw(self):
 		screen.blit(pygame.transform.flip(self.image, self.flip, False), self.rect)
+	
+
+	def shoot(self):
+		if self.direction == -1:
+			return(Bullet(self.rect.center[0], self.rect.center[1], 10, 0, 1, RED))
+		else:
+			return(Bullet(self.rect.center[0], self.rect.center[1], 10, 0, 0, RED))
+
+		
+
+
+
+
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self,pos_x,pos_y, speed, drop, direction, color):
+        super().__init__()
+        self.direction = direction
+        self.speed = speed
+        self.drop = drop
+        self.width = 25
+        self.height = 25
+        self.image = pygame.Surface([25,25])
+        self.image.fill((color))
+        self.rect = self.image.get_rect(center =(pos_x, pos_y))
+    
+    def update(self):
+        
+        if self.direction == 0:
+            self.rect.x += self.speed
+        elif self.direction == 1:
+            #self.speed *= -1
+            self.rect.x -= self.speed
+            
+        self.rect.y -= self.drop #change this to have arc affect 
+        for tile in world.obstacle_list:
+            if tile[1].colliderect(self.rect.x, self.rect.y, self.width, self.height):
+                self.kill()
+#'''
+class Enemy(pygame.sprite.Sprite):
+
+	def __init__(self, alive,x,y,facing,shoot_interval, on_level):
+		super().__init__()
+		self.alive = alive #will be true or false
+		self.image = pygame.Surface([50,50])
+		self.image.fill((255,255,255))
+		self.rect = self.image.get_rect(center = (x,y))
+		self.facing = facing
+		self.shoot_interval = shoot_interval
+		self.shoot_timer = 0
+		self.last_shot = 0
+		self.on_level = on_level
+		self.start_pos_x = x
+		self.start_pos_y = y
+
+	def shoot(self):
+		
+		if self.facing == "left":
+
+			return(enemy_bullet_group.add(Bullet(self.rect.center[0], self.rect.center[1], 10, 0, 1, BLACK)))
+		else:
+
+			return(enemy_bullet_group.add(Bullet(self.rect.center[0], self.rect.center[1], 10, 0, 0, BLACK)))
+	
+	def hide_me(self):
+		self.rect.x = 1000
+		self.rect.x = 1000
+	
+	def show_me(self):
+		self.rect.x = self.start_pos_x
+		self.rect.y = self.start_pos_y
+
+	
+	def update(self):
+		if pygame.sprite.spritecollide(self, player_bullet_group, True):
+			self.image.fill((255,10,10))
+			self.alive = False
+		if self.alive == True:
+			current_time = pygame.time.get_ticks()
+			self.shoot_timer += current_time - self.last_shot
+			if self.shoot_timer >= self.shoot_interval:
+				self.shoot()
+				self.shoot_timer = 0
+				self.last_shot = current_time
+		if level == self.on_level:
+			self.show_me()
+		elif level != self.on_level:
+			self.hide_me()
+
+		
+	
+			
+
+
+
+#'''
+
 
 
 class World():
@@ -177,7 +301,7 @@ class World():
 		self.obstacle_list = []
 
 	def process_data(self, data):
-		#iterate through each value in level data file
+		#parse each value in level data file
 		for y, row in enumerate(data):
 			for x, tile in enumerate(row):
 				if tile >= 0:
@@ -189,7 +313,7 @@ class World():
 					if tile >= 0 and tile <= 8:
 						self.obstacle_list.append(tile_data)
 					elif tile == 15:#create player
-						player = Soldier('player', x * TILE_SIZE, y * TILE_SIZE, 1.65, 3)
+						player = Soldier('player', x * TILE_SIZE, y * TILE_SIZE, 1.65, 4)
 					elif tile == 20:#create exit
 						exit = Exit(img, x * TILE_SIZE, y * TILE_SIZE)
 						exit_group.add(exit)
@@ -200,6 +324,8 @@ class World():
 	def draw(self):
 		for tile in self.obstacle_list:
 			screen.blit(tile[0], tile[1])
+	
+
 
 
 
@@ -215,6 +341,12 @@ class Exit(pygame.sprite.Sprite):
 
 
 exit_group = pygame.sprite.Group()
+player_bullet_group = pygame.sprite.Group()
+enemy_bullet_group = pygame.sprite.Group()
+enemy_group = pygame.sprite.Group()
+enemy_group.add(Enemy(True, 700, 550 ,"left", 100000, 1))
+enemy_group.add(Enemy(True, 40, 240 ,"right", 10000, 1))
+enemy_group.add(Enemy(True, 700, 550 ,"left", 1000, 2))
 
 
 #create empty tile list
@@ -233,6 +365,7 @@ player = world.process_data(world_data)
 
 
 
+#game run loop
 run = True
 while run:
 
@@ -249,6 +382,14 @@ while run:
 	#update and draw groups
 	exit_group.update()
 	exit_group.draw(screen)
+	player_bullet_group.update()
+	player_bullet_group.draw(screen)
+	enemy_bullet_group.update()
+	enemy_bullet_group.draw(screen)
+	enemy_group.update()
+	enemy_group.draw(screen)
+	
+	
 
 	if player.in_air:
 		player.update_action(2)
@@ -257,6 +398,7 @@ while run:
 	else:
 		player.update_action(0)
 	player.move(moving_left, moving_right)
+	
 
 	level_complete = player.move(moving_left, moving_right)
 	if level_complete:
@@ -277,6 +419,10 @@ while run:
 		if event.type == pygame.QUIT:
 			run = False
 		if event.type == pygame.KEYDOWN:
+			#if event.key == pygame.K_t:
+				#enemy_group.add(Enemy(True, random.randint(250,750),random.randint(450,550),"left",10000))
+			if event.key == pygame.K_SPACE:
+				player_bullet_group.add(player.shoot())
 			if event.key == pygame.K_a:
 				moving_left = True
 			if event.key == pygame.K_d:
