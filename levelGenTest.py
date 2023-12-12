@@ -26,6 +26,8 @@ level = 1
 moving_left = False
 moving_right = False
 
+GOING_UP = False
+
 img_list = []
 for x in range(TILE_TYPES):
 	img = pygame.image.load(f'img/Tile/{x}.png')
@@ -57,13 +59,15 @@ def reset_level():
 
 
 class Soldier(pygame.sprite.Sprite):
-	def __init__(self, char_type, x, y, scale, speed):
+	def __init__(self, char_type, x, y, scale, speed, going_up):
 		pygame.sprite.Sprite.__init__(self)
 		self.char_type = char_type
 		self.speed = speed
 		
 		self.direction = 1
-		self.vel_y = -5
+		if going_up: 
+			self.vel_y = -9
+		else: self.vel_y = 0
 		self.vel_x = 0
 		self.jump = False
 		self.in_air = True
@@ -323,7 +327,7 @@ class World():
 					if tile >= 0 and tile <= 8:
 						self.obstacle_list.append(tile_data)
 					elif tile == 15:#create player
-						player = Soldier('player', x * TILE_SIZE, y * TILE_SIZE, 1.65, 4)
+						player = Soldier('player', x * TILE_SIZE, y * TILE_SIZE, 1.65, 4, GOING_UP)
 					elif tile == 20:#create exit
 						exit = Exit(img, x * TILE_SIZE, y * TILE_SIZE)
 						exit_group.add(exit)
@@ -418,6 +422,7 @@ while run:
 				world_data = reset_level()
 				if level <= MAX_LEVELS:
 					#load in level data and create world
+					GOING_UP = True
 					with open(f'level{level}_data.csv', newline='') as csvfile:
 						reader = csv.reader(csvfile, delimiter=',')
 						for x, row in enumerate(reader):
@@ -433,6 +438,7 @@ while run:
 				level -= 1
 				world_data = reset_level()
 				if level >= 0:
+					GOING_UP = False
 					#load in level data and create world
 					with open(f'level{level}_data.csv', newline='') as csvfile:
 						reader = csv.reader(csvfile, delimiter=',')
