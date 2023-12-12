@@ -15,10 +15,10 @@ pygame.display.set_caption('Shooter')
 clock = pygame.time.Clock()
 FPS = 60
 
-GRAVITY = 0.6
+GRAVITY = 0.4
 ROWS = 16
 COLS = 150
-MAX_LEVELS = 3
+MAX_LEVELS = 6
 TILE_SIZE = SCREEN_HEIGHT // ROWS
 TILE_TYPES = 21
 level = 1
@@ -40,6 +40,7 @@ RED = (255, 0, 0)
 WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
 BLACK = (0, 0, 0)
+DARK_GREEN = (40,133,33)
 
 
 def draw_bg():
@@ -66,7 +67,7 @@ class Soldier(pygame.sprite.Sprite):
 		
 		self.direction = 1
 		if going_up: 
-			self.vel_y = -9
+			self.vel_y = -7
 		else: self.vel_y = 0
 		self.vel_x = 0
 		self.jump = False
@@ -104,7 +105,7 @@ class Soldier(pygame.sprite.Sprite):
 				
 
 
-				self.vel_y = -10
+				self.vel_y = -9
 
 				if pewpew.direction == 0:
 					self.vel_x = 12
@@ -137,7 +138,7 @@ class Soldier(pygame.sprite.Sprite):
 			self.direction = 1
 
 		if self.jump == True and self.in_air == False:
-			self.vel_y = -13
+			self.vel_y = -11
 			self.jump = False
 			self.in_air = True
 		
@@ -216,9 +217,9 @@ class Soldier(pygame.sprite.Sprite):
 
 	def shoot(self):
 		if self.direction == -1:
-			return(Bullet(self.rect.center[0], self.rect.center[1], 10, 0, 1, GREEN))
+			return(Bullet(self.rect.center[0], self.rect.center[1], 10, 0, 1, DARK_GREEN))
 		else:
-			return(Bullet(self.rect.center[0], self.rect.center[1], 10, 0, 0, GREEN))
+			return(Bullet(self.rect.center[0], self.rect.center[1], 10, 0, 0, DARK_GREEN))
 
 		
 
@@ -236,6 +237,8 @@ class Bullet(pygame.sprite.Sprite):
         self.image = pygame.Surface([11,11])
         self.image.fill((color))
         self.rect = self.image.get_rect(center =(pos_x, pos_y))
+        
+
     
     def update(self):
         
@@ -249,7 +252,7 @@ class Bullet(pygame.sprite.Sprite):
         for tile in world.obstacle_list:
             if tile[1].colliderect(self.rect.x, self.rect.y, self.width, self.height):
                 self.kill()
-#'''
+
 class Enemy(pygame.sprite.Sprite):
 
 	def __init__(self, alive,x,y,facing,shoot_interval, on_level):
@@ -360,7 +363,23 @@ enemy_bullet_group = pygame.sprite.Group()
 enemy_group = pygame.sprite.Group()
 enemy_group.add(Enemy(True, 700, 550 ,"left", 100000, 1))
 enemy_group.add(Enemy(True, 40, 240 ,"right", 10000, 1))
+
 enemy_group.add(Enemy(True, 700, 550 ,"left", 1000, 2))
+
+enemy_group.add(Enemy(True, 700, 450 ,"left", 1000, 3))
+
+enemy_group.add(Enemy(True, 700, 450 ,"left", 1000, 4))
+
+enemy_group.add(Enemy(True, 50, 250 ,"right", 100000, 5))
+enemy_group.add(Enemy(True, 50, 200 ,"right", 10000, 5))
+enemy_group.add(Enemy(True, 50, 250 ,"right", 10000, 5))
+enemy_group.add(Enemy(True, 50, 300 ,"right", 100000, 5))
+enemy_group.add(Enemy(True, 50, 350 ,"right", 10000, 5))
+enemy_group.add(Enemy(True, 50, 400 ,"right", 100000, 5))
+enemy_group.add(Enemy(True, 50, 450 ,"right", 10000, 5))
+
+
+
 
 
 #create empty tile list
