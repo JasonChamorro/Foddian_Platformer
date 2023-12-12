@@ -364,18 +364,18 @@ enemy_group = pygame.sprite.Group()
 enemy_group.add(Enemy(True, 700, 550 ,"left", 100000, 1))
 enemy_group.add(Enemy(True, 40, 240 ,"right", 10000, 1))
 
-enemy_group.add(Enemy(True, 700, 550 ,"left", 1000, 2))
+enemy_group.add(Enemy(True, 700, 350 ,"left", 10000, 2))
 
 enemy_group.add(Enemy(True, 700, 450 ,"left", 1000, 3))
 
 enemy_group.add(Enemy(True, 700, 450 ,"left", 1000, 4))
 
 enemy_group.add(Enemy(True, 50, 250 ,"right", 100000, 5))
-enemy_group.add(Enemy(True, 50, 200 ,"right", 10000, 5))
+enemy_group.add(Enemy(True, 700, 200 ,"left", 10000, 5))
 enemy_group.add(Enemy(True, 50, 250 ,"right", 10000, 5))
-enemy_group.add(Enemy(True, 50, 300 ,"right", 100000, 5))
+enemy_group.add(Enemy(True, 700, 300 ,"left", 100000, 5))
 enemy_group.add(Enemy(True, 50, 350 ,"right", 10000, 5))
-enemy_group.add(Enemy(True, 50, 400 ,"right", 100000, 5))
+enemy_group.add(Enemy(True, 700, 400 ,"left", 100000, 5))
 enemy_group.add(Enemy(True, 50, 450 ,"right", 10000, 5))
 
 
