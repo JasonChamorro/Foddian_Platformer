@@ -103,7 +103,9 @@ class Soldier(pygame.sprite.Sprite):
 				#skill to the game
 
 
-				self.jump = True
+
+				self.vel_y = -10
+
 				if pewpew.direction == 0:
 					
 					#Getting shot from the left
