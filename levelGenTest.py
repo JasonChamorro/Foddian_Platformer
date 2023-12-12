@@ -6,6 +6,7 @@ import csv
 pygame.init()
 
 
+#Setting up the screen and variables 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = int(SCREEN_WIDTH * 0.8)
 
@@ -42,10 +43,13 @@ GREEN = (0, 255, 0)
 BLACK = (0, 0, 0)
 DARK_GREEN = (40,133,33)
 
+#Draws the backgorund
 
 def draw_bg():
 	screen.fill(BG)
 
+
+#Reseting the level 
 def reset_level():
 
 	exit_group.empty()
@@ -58,9 +62,11 @@ def reset_level():
 
 	return data
 
-
+#This is the player class, AKA the character you are controlling
 class Soldier(pygame.sprite.Sprite):
+
 	def __init__(self, char_type, x, y, scale, speed, going_up):
+
 		pygame.sprite.Sprite.__init__(self)
 		self.char_type = char_type
 		self.speed = speed
@@ -77,7 +83,9 @@ class Soldier(pygame.sprite.Sprite):
 		self.frame_index = 0
 		self.action = 0
 		self.update_time = pygame.time.get_ticks()
-		
+
+
+		#Player animation for moving, standing still, and jumping 
 		animation_types = ['Idle', 'Run', 'Jump']
 		for animation in animation_types:
 			temp_list = []
@@ -95,7 +103,8 @@ class Soldier(pygame.sprite.Sprite):
 		self.width = self.image.get_width()
 		self.height = self.image.get_height()
 
-
+#Update fundtion, in addtion to doing the standard update things, this is where hit registration is detected and the player 
+#is moved after they are shot
 	def update(self):
 		self.update_animation()
 		
@@ -361,6 +370,7 @@ exit_group = pygame.sprite.Group()
 player_bullet_group = pygame.sprite.Group()
 enemy_bullet_group = pygame.sprite.Group()
 enemy_group = pygame.sprite.Group()
+#enemy_group.add(Enemy(Alive, X, Y ,Facing,  Fire rate higher is slower, level))
 enemy_group.add(Enemy(True, 700, 550 ,"left", 100000, 1))
 enemy_group.add(Enemy(True, 40, 240 ,"right", 10000, 1))
 
