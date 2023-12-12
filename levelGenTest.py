@@ -18,7 +18,7 @@ FPS = 60
 GRAVITY = 0.6
 ROWS = 16
 COLS = 150
-MAX_LEVELS = 2 
+MAX_LEVELS = 3
 TILE_SIZE = SCREEN_HEIGHT // ROWS
 TILE_TYPES = 21
 level = 1
@@ -63,7 +63,8 @@ class Soldier(pygame.sprite.Sprite):
 		self.speed = speed
 		
 		self.direction = 1
-		self.vel_y = 0
+		self.vel_y = -5
+		self.vel_x = 0
 		self.jump = False
 		self.in_air = True
 		self.flip = False
@@ -97,21 +98,17 @@ class Soldier(pygame.sprite.Sprite):
 			
 			if pygame.sprite.collide_rect(self, pewpew):
 				
-				#marcus movement hard make them go to left or right when they are shot :)
-				#also we have a bug that I am just gonna say is a feature, if you are jumping when you get shot it 
-				#doesn't make you jump in air again, but we can just say that is like a parry or something, will add more 
-				#skill to the game
-
 
 
 				self.vel_y = -10
 
 				if pewpew.direction == 0:
+					self.vel_x = 12
 					
 					#Getting shot from the left
 					pewpew.kill()
 				elif pewpew.direction == 1:
-					
+					self.vel_x = -8
 					#Getting shot from the right
 					pewpew.kill()
 					
@@ -142,16 +139,29 @@ class Soldier(pygame.sprite.Sprite):
 		
 
 		self.vel_y += GRAVITY
+		if abs(self.vel_x) < 1: 
+			self.vel_x = 0 
+		if self.vel_x > 0: 
+			dx = self.vel_x
+			self.vel_x -= GRAVITY
+		elif self.vel_x < 0: 
+			dx = self.vel_x
+			self.vel_x += GRAVITY
+
 		if self.vel_y > 10:
 			self.vel_y
 			self.jump = False 
 			self.in_air = True
 		dy += self.vel_y
+		
 
-		level_complete = False
+		level_complete = (False,)
 		if pygame.sprite.spritecollide(self, exit_group, False):
-			
-			level_complete = True
+			if self.rect.y > 560:
+				level_complete = (1,self.rect.x)
+			else: 
+				level_complete = (2,self.rect.x)
+				
 
 		for tile in world.obstacle_list:
 			if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
@@ -202,9 +212,9 @@ class Soldier(pygame.sprite.Sprite):
 
 	def shoot(self):
 		if self.direction == -1:
-			return(Bullet(self.rect.center[0], self.rect.center[1], 10, 0, 1, RED))
+			return(Bullet(self.rect.center[0], self.rect.center[1], 10, 0, 1, GREEN))
 		else:
-			return(Bullet(self.rect.center[0], self.rect.center[1], 10, 0, 0, RED))
+			return(Bullet(self.rect.center[0], self.rect.center[1], 10, 0, 0, GREEN))
 
 		
 
@@ -217,9 +227,9 @@ class Bullet(pygame.sprite.Sprite):
         self.direction = direction
         self.speed = speed
         self.drop = drop
-        self.width = 25
-        self.height = 25
-        self.image = pygame.Surface([25,25])
+        self.width = 11
+        self.height = 11
+        self.image = pygame.Surface([11,11])
         self.image.fill((color))
         self.rect = self.image.get_rect(center =(pos_x, pos_y))
     
@@ -401,7 +411,9 @@ while run:
 	
 
 	level_complete = player.move(moving_left, moving_right)
-	if level_complete:
+	
+	#MOVING UP 
+	if level_complete[0] == 2:
 				level += 1
 				world_data = reset_level()
 				if level <= MAX_LEVELS:
@@ -413,6 +425,24 @@ while run:
 								world_data[x][y] = int(tile)
 					world = World()
 					player = world.process_data(world_data)	
+					player.rect.x = level_complete[1]
+					player.rect.y = 500
+
+	#FALLING
+	elif level_complete[0] == 1: 
+				level -= 1
+				world_data = reset_level()
+				if level >= 0:
+					#load in level data and create world
+					with open(f'level{level}_data.csv', newline='') as csvfile:
+						reader = csv.reader(csvfile, delimiter=',')
+						for x, row in enumerate(reader):
+							for y, tile in enumerate(row):
+								world_data[x][y] = int(tile)
+					world = World()
+					player = world.process_data(world_data)	
+					player.rect.y = 75
+					player.rect.x = level_complete[1]
 
 
 	for event in pygame.event.get():
