@@ -296,7 +296,6 @@ class Enemy(pygame.sprite.Sprite):
 				img = pygame.image.load(f'img/{self.char_type}/{animation}/{i}.png').convert_alpha()
 				img = pygame.transform.scale(img, (int(img.get_width() * 1.65), int(img.get_height() * 1.65)))
 				temp_list.append(img)
-				print(temp_list)
 			self.animation_list.append(temp_list)
 
 		self.image = self.animation_list[self.action][self.frame_index]
@@ -433,7 +432,6 @@ enemy_group.add(Enemy(True, 700, 450 ,"left", 1000, 4, 'enemy'))
 
 enemy_group.add(Enemy(True, 50, 250 ,"right", 100000, 5, 'enemy'))
 enemy_group.add(Enemy(True, 700, 200 ,"left", 10000, 5, 'enemy'))
-enemy_group.add(Enemy(True, 50, 250 ,"right", 10000, 5, 'enemy'))
 enemy_group.add(Enemy(True, 700, 300 ,"left", 100000, 5, 'enemy'))
 enemy_group.add(Enemy(True, 50, 350 ,"right", 10000, 5, 'enemy'))
 enemy_group.add(Enemy(True, 700, 400 ,"left", 100000, 5, 'enemy'))
