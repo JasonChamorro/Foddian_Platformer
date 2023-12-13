@@ -13,6 +13,10 @@ SCREEN_HEIGHT = int(SCREEN_WIDTH * 0.8)
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption('Shooter')
 
+#plays and loops music
+pygame.mixer.music.load(f'gamemusic.mp3')
+pygame.mixer.music.play(-1)
+
 clock = pygame.time.Clock()
 FPS = 60
 
@@ -290,7 +294,7 @@ class Enemy(pygame.sprite.Sprite):
 		self.update_time = pygame.time.get_ticks()
 
 		#Animating the zombies 
-		animation_types = ['idle', 'idle reverse', 'not alive', 'not alive reverse']
+		animation_types = ['idle', 'idle reverse', 'not alive', 'not alive reverse', 'Sunflower']
 		for animation in animation_types:
 			temp_list = []
 			num_of_frames = len(os.listdir(f'img/{self.char_type}/{animation}'))
@@ -349,7 +353,10 @@ class Enemy(pygame.sprite.Sprite):
 			self.alive = False
 		if self.alive == True:
 			if self.facing == 'left':
-				self.update_action(1)
+				if self.on_level == 6:
+					self.update_action(4)
+				else:
+					self.update_action(1)
 			else:
 				self.update_action(0)
 			current_time = pygame.time.get_ticks()
@@ -360,13 +367,17 @@ class Enemy(pygame.sprite.Sprite):
 				self.last_shot = current_time
 		else:
 			if self.facing == 'left':
-				self.update_action(3)
+				if self.on_level == 6:
+					self.update_action(4)
+				else:
+					self.update_action(3)
 			else:
 				self.update_action(2)
 		if level == self.on_level:
 			self.show_me()
 		elif level != self.on_level:
 			self.hide_me()
+
 			
 
 
@@ -441,6 +452,7 @@ enemy_group.add(Enemy(True, 50, 350 ,"right", 10000, 5, 'enemy'))
 enemy_group.add(Enemy(True, 700, 430 ,"left", 100000, 5, 'enemy'))
 enemy_group.add(Enemy(True, 50, 470 ,"right", 10000, 5, 'enemy'))
 
+enemy_group.add(Enemy(True, 450, 550 , "left", 100000000000000, 6, 'enemy'))
 
 
 #create empty tile list
