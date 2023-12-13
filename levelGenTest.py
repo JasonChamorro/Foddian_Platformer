@@ -36,7 +36,7 @@ for x in range(TILE_TYPES):
 	img_list.append(img)
 
 
-BG = (144, 201, 120)
+BG = pygame.image.load(f'img/background/background.png')
 RED = (255, 0, 0)
 WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
@@ -46,7 +46,7 @@ DARK_GREEN = (40,133,33)
 #Draws the backgorund
 
 def draw_bg():
-	screen.fill(BG)
+	screen.blit(BG, (0, 0))
 
 
 #Reseting the level 
