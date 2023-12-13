@@ -1,3 +1,18 @@
+"""
+Authors: Jason Chamorro, Marcus Razo, Jacob Martinez
+
+Sourses: 
+Python / Pygame Tutorial: Creating a basic bullet shooting mechanic: https://www.youtube.com/watch?v=JmpA7TU_0Ms
+Baground Asset is owned by Terraria and Re-logic
+Music: https://www.youtube.com/watch?v=sQ1LW_1sFtY&list=PLGX7QK2Vlkbrk3SEnwShq2EU8lMW07S7l&index=13
+	Original composition and lyrics by Laura Shigihara. From Plants vs Zombies
+Sprites inspired by art and assests from Plants vs Zonbies 
+Plants vs Zombies is owned by Popcap and EA.
+
+Desciption:
+Main file for the platformer. 
+"""
+
 import pygame
 import os
 import random
