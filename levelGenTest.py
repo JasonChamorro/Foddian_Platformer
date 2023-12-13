@@ -6,7 +6,7 @@ import csv
 pygame.init()
 
 
-#Setting up the screen and variables 
+#Setting up the screen and variables that will be used throughout code 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = int(SCREEN_WIDTH * 0.8)
 
@@ -29,14 +29,16 @@ moving_right = False
 
 GOING_UP = False
 
+#list of images to be used for animation 
+
 img_list = []
 for x in range(TILE_TYPES):
 	img = pygame.image.load(f'img/Tile/{x}.png')
 	img = pygame.transform.scale(img, (TILE_SIZE, TILE_SIZE))
 	img_list.append(img)
 
-
 BG = pygame.image.load(f'img/background/background.png')
+
 RED = (255, 0, 0)
 WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
@@ -64,7 +66,7 @@ def reset_level():
 
 #This is the player class, AKA the character you are controlling
 class Soldier(pygame.sprite.Sprite):
-
+#Constructor 
 	def __init__(self, char_type, x, y, scale, speed, going_up):
 
 		pygame.sprite.Sprite.__init__(self)
@@ -132,7 +134,7 @@ class Soldier(pygame.sprite.Sprite):
 
 
 
-
+		#movement of the player in the x and y and keeping track of when to flip the sprite
 	def move(self, moving_left, moving_right):
 		dx = 0
 		dy = 0
@@ -176,7 +178,7 @@ class Soldier(pygame.sprite.Sprite):
 			else: 
 				level_complete = (2,self.rect.x)
 				
-
+		#making it so you do not fall through the floor/can stand on things
 		for tile in world.obstacle_list:
 			if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
 				dx = 0
@@ -197,7 +199,7 @@ class Soldier(pygame.sprite.Sprite):
 		return level_complete
 
 
-
+	#updating the player animations 
 	def update_animation(self):
 		ANIMATION_COOLDOWN = 100
 		self.image = self.animation_list[self.action][self.frame_index]
@@ -211,7 +213,7 @@ class Soldier(pygame.sprite.Sprite):
 				self.frame_index = 0
 
 
-
+	#checking to see if there are new actions for gameplay and animation 
 	def update_action(self, new_action):
 		if new_action != self.action:
 			self.action = new_action
@@ -219,11 +221,11 @@ class Soldier(pygame.sprite.Sprite):
 			self.update_time = pygame.time.get_ticks()
 
 
-
+	#Drawing the character and flipping if needed
 	def draw(self):
 		screen.blit(pygame.transform.flip(self.image, self.flip, False), self.rect)
 	
-
+	#Creating the bullets that the player shoots 
 	def shoot(self):
 		self.shoot_time = pygame.time.get_ticks()
 		if self.direction == -1:
@@ -235,8 +237,9 @@ class Soldier(pygame.sprite.Sprite):
 
 
 
-
+#Bullet class to be used by both player and enemies 
 class Bullet(pygame.sprite.Sprite):
+	#constructor 
     def __init__(self,pos_x,pos_y, speed, drop, direction, color):
         super().__init__()
         self.direction = direction
@@ -249,7 +252,8 @@ class Bullet(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center =(pos_x, pos_y))
         
 
-    
+    #Standard update function, checking the direction the shooter is facing, and having room to shoot bullets with drop
+	#Also makes sure bullets don't pass through walls
     def update(self):
         
         if self.direction == 0:
@@ -258,22 +262,19 @@ class Bullet(pygame.sprite.Sprite):
             #self.speed *= -1
             self.rect.x -= self.speed
             
-        self.rect.y -= self.drop #change this to have arc affect 
+        self.rect.y -= self.drop 
         for tile in world.obstacle_list:
             if tile[1].colliderect(self.rect.x, self.rect.y, self.width, self.height):
                 self.kill()
 
-class Enemy(pygame.sprite.Sprite):
 
+#Enemy class
+class Enemy(pygame.sprite.Sprite):
+	#constructor 
 	def __init__(self, alive,x,y,facing,shoot_interval, on_level, char_type):
 		super().__init__()
-
 		self.char_type = char_type
-
 		self.alive = alive #will be true or false
-		# self.image = pygame.Surface([50,50])
-		# self.image.fill((255,255,255))
-		# self.rect = self.image.get_rect(center = (x,y))
 		self.facing = facing
 		self.shoot_interval = shoot_interval
 		self.shoot_timer = 0
@@ -288,6 +289,7 @@ class Enemy(pygame.sprite.Sprite):
 		self.action = 0
 		self.update_time = pygame.time.get_ticks()
 
+		#Animating the zombies 
 		animation_types = ['idle', 'idle reverse', 'not alive', 'not alive reverse']
 		for animation in animation_types:
 			temp_list = []
@@ -296,7 +298,6 @@ class Enemy(pygame.sprite.Sprite):
 				img = pygame.image.load(f'img/{self.char_type}/{animation}/{i}.png').convert_alpha()
 				img = pygame.transform.scale(img, (int(img.get_width() * 1.65), int(img.get_height() * 1.65)))
 				temp_list.append(img)
-				print(temp_list)
 			self.animation_list.append(temp_list)
 
 		self.image = self.animation_list[self.action][self.frame_index]
@@ -306,6 +307,7 @@ class Enemy(pygame.sprite.Sprite):
 		self.width = self.image.get_width()
 		self.height = self.image.get_height()
 
+		#Updating animations based on frames 
 	def update_animation(self):
 		ANIMATION_COOLDOWN = 100
 		self.image = self.animation_list[self.action][self.frame_index]
@@ -317,29 +319,30 @@ class Enemy(pygame.sprite.Sprite):
 				self.frame_index = len(self.animation_list[self.action]) - 1
 			else:
 				self.frame_index = 0
-
+		#Similar to player class, checking and updating actions
 	def update_action(self, new_action):
 		if new_action != self.action:
 			self.action = new_action
 			self.frame_index = 0
 			self.update_time = pygame.time.get_ticks()
 
+	#Shooting by creating bullets based on which way it is facing 
 	def shoot(self):
 		
 		if self.facing == "left":
 			return(enemy_bullet_group.add(Bullet(self.rect.center[0], self.rect.center[1], 10, 0, 1, BLACK)))
 		else:
 			return(enemy_bullet_group.add(Bullet(self.rect.center[0], self.rect.center[1], 10, 0, 0, BLACK)))
-	
+	#Used to move hide enemies when they shouldnt be there 
 	def hide_me(self):
 		self.rect.x = 1000
 		self.rect.x = 1000
-	
+	#Showing them again 
 	def show_me(self):
 		self.rect.x = self.start_pos_x
 		self.rect.y = self.start_pos_y
 
-	
+	#Updating animation, if they are alive, shooting based on their given fire rate, and showing or hiding based on level 
 	def update(self):
 		self.update_animation()
 		if pygame.sprite.spritecollide(self, player_bullet_group, True):
@@ -368,14 +371,13 @@ class Enemy(pygame.sprite.Sprite):
 
 
 
-#'''
 
 
-
+#world class where everything is created 
 class World():
 	def __init__(self):
 		self.obstacle_list = []
-
+	#Processing the data given in file and turning it into tiles to create levels 
 	def process_data(self, data):
 		#parse each value in level data file
 		for y, row in enumerate(data):
@@ -396,7 +398,7 @@ class World():
 
 		return player
 
-
+	#drawing the levels 
 	def draw(self):
 		for tile in self.obstacle_list:
 			screen.blit(tile[0], tile[1])
@@ -405,7 +407,7 @@ class World():
 
 
 
-
+#Exit tiles that let you move between levels 
 class Exit(pygame.sprite.Sprite):
 	def __init__(self, img, x, y):
 		pygame.sprite.Sprite.__init__(self)
@@ -415,29 +417,29 @@ class Exit(pygame.sprite.Sprite):
 
 
 
-
+#sprite groups 
 exit_group = pygame.sprite.Group()
 player_bullet_group = pygame.sprite.Group()
 enemy_bullet_group = pygame.sprite.Group()
 enemy_group = pygame.sprite.Group()
 
-#enemy_group.add(Enemy(Alive, X, Y ,Facing,  Fire rate higher is slower, level))
+#Format for creating an enemy 
+#enemy_group.add(Enemy(Shooting?, X, Y ,Facing,  Fire rate (higher is slower), level, 'enemy'))
 enemy_group.add(Enemy(True, 700, 550 ,"left", 100000, 1, 'enemy'))
-enemy_group.add(Enemy(True, 40, 240 ,"right", 10000, 1, 'enemy'))
+enemy_group.add(Enemy(True, 40, 230 ,"right", 10000, 1, 'enemy'))
 
 enemy_group.add(Enemy(True, 700, 350 ,"left", 10000, 2, 'enemy'))
 
-enemy_group.add(Enemy(True, 700, 450 ,"left", 1000, 3, 'enemy'))
+enemy_group.add(Enemy(True, 700, 470 ,"left", 1000, 3, 'enemy'))
 
-enemy_group.add(Enemy(True, 700, 450 ,"left", 1000, 4, 'enemy'))
+enemy_group.add(Enemy(True, 700, 430 ,"left", 1000, 4, 'enemy'))
 
-enemy_group.add(Enemy(True, 50, 250 ,"right", 100000, 5, 'enemy'))
-enemy_group.add(Enemy(True, 700, 200 ,"left", 10000, 5, 'enemy'))
-enemy_group.add(Enemy(True, 50, 250 ,"right", 10000, 5, 'enemy'))
-enemy_group.add(Enemy(True, 700, 300 ,"left", 100000, 5, 'enemy'))
+enemy_group.add(Enemy(True, 50, 270 ,"right", 100000, 5, 'enemy'))
+enemy_group.add(Enemy(True, 700, 230 ,"left", 10000, 5, 'enemy'))
+enemy_group.add(Enemy(True, 700, 310 ,"left", 100000, 5, 'enemy'))
 enemy_group.add(Enemy(True, 50, 350 ,"right", 10000, 5, 'enemy'))
-enemy_group.add(Enemy(True, 700, 400 ,"left", 100000, 5, 'enemy'))
-enemy_group.add(Enemy(True, 50, 450 ,"right", 10000, 5, 'enemy'))
+enemy_group.add(Enemy(True, 700, 430 ,"left", 100000, 5, 'enemy'))
+enemy_group.add(Enemy(True, 50, 470 ,"right", 10000, 5, 'enemy'))
 
 
 
@@ -484,6 +486,7 @@ while run:
 	enemy_group.update()
 	enemy_group.draw(screen)
 
+	#Checking some quality of life things, like if the player is in air, shooting speed, and movement 
 	if time_elapsed - player.shoot_time < 200:
 		player.shooting = True
 	else:
@@ -537,13 +540,11 @@ while run:
 					player.rect.y = 75
 					player.rect.x = level_complete[1]
 
-
+		#key inputs 
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
 			run = False
 		if event.type == pygame.KEYDOWN:
-			#if event.key == pygame.K_t:
-				#enemy_group.add(Enemy(True, random.randint(250,750),random.randint(450,550),"left",10000))
 			if event.key == pygame.K_SPACE:
 				player_bullet_group.add(player.shoot())
 			if event.key == pygame.K_a:
