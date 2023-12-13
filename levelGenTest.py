@@ -16,16 +16,18 @@ pygame.display.set_caption('Shooter')
 clock = pygame.time.Clock()
 FPS = 60
 
-GRAVITY = 0.6
+GRAVITY = 0.4
 ROWS = 16
 COLS = 150
-MAX_LEVELS = 2 
+MAX_LEVELS = 6
 TILE_SIZE = SCREEN_HEIGHT // ROWS
 TILE_TYPES = 21
 level = 1
 
 moving_left = False
 moving_right = False
+
+GOING_UP = False
 
 img_list = []
 for x in range(TILE_TYPES):
@@ -39,6 +41,7 @@ RED = (255, 0, 0)
 WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
 BLACK = (0, 0, 0)
+DARK_GREEN = (40,133,33)
 
 #Draws the backgorund
 
@@ -61,25 +64,29 @@ def reset_level():
 
 #This is the player class, AKA the character you are controlling
 class Soldier(pygame.sprite.Sprite):
-	#Constructor 
-	def __init__(self, char_type, x, y, scale, speed):
+
+	def __init__(self, char_type, x, y, scale, speed, going_up):
+
 		pygame.sprite.Sprite.__init__(self)
 		self.char_type = char_type
 		self.speed = speed
 		
 		self.direction = 1
-		self.vel_y = 0
+		if going_up: 
+			self.vel_y = -7
+		else: self.vel_y = 0
+		self.vel_x = 0
 		self.jump = False
 		self.in_air = True
 		self.flip = False
+		self.shoot_time = 0
 		self.animation_list = []
 		self.frame_index = 0
 		self.action = 0
 		self.update_time = pygame.time.get_ticks()
-
-
-		#Player animation for moving, standing still, and jumping 
-		animation_types = ['Idle', 'Run', 'Jump']
+    
+		#Player animation for moving, standing still, jumping, and shooting
+		animation_types = ['Idle', 'Run', 'Jump', 'Shoot']
 		for animation in animation_types:
 			temp_list = []
 			num_of_frames = len(os.listdir(f'img/{self.char_type}/{animation}'))
@@ -105,21 +112,17 @@ class Soldier(pygame.sprite.Sprite):
 			
 			if pygame.sprite.collide_rect(self, pewpew):
 				
-				#marcus movement hard make them go to left or right when they are shot :)
-				#also we have a bug that I am just gonna say is a feature, if you are jumping when you get shot it 
-				#doesn't make you jump in air again, but we can just say that is like a parry or something, will add more 
-				#skill to the game
 
 
-
-				self.vel_y = -10
+				self.vel_y = -9
 
 				if pewpew.direction == 0:
+					self.vel_x = 12
 					
 					#Getting shot from the left
 					pewpew.kill()
 				elif pewpew.direction == 1:
-					
+					self.vel_x = -8
 					#Getting shot from the right
 					pewpew.kill()
 					
@@ -144,22 +147,35 @@ class Soldier(pygame.sprite.Sprite):
 			self.direction = 1
 
 		if self.jump == True and self.in_air == False:
-			self.vel_y = -13
+			self.vel_y = -11
 			self.jump = False
 			self.in_air = True
 		
 
 		self.vel_y += GRAVITY
+		if abs(self.vel_x) < 1: 
+			self.vel_x = 0 
+		if self.vel_x > 0: 
+			dx = self.vel_x
+			self.vel_x -= GRAVITY
+		elif self.vel_x < 0: 
+			dx = self.vel_x
+			self.vel_x += GRAVITY
+
 		if self.vel_y > 10:
 			self.vel_y
 			self.jump = False 
 			self.in_air = True
 		dy += self.vel_y
+		
 
-		level_complete = False
+		level_complete = (False,)
 		if pygame.sprite.spritecollide(self, exit_group, False):
-			
-			level_complete = True
+			if self.rect.y > 560:
+				level_complete = (1,self.rect.x)
+			else: 
+				level_complete = (2,self.rect.x)
+				
 
 		for tile in world.obstacle_list:
 			if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
@@ -209,10 +225,11 @@ class Soldier(pygame.sprite.Sprite):
 	
 
 	def shoot(self):
+		self.shoot_time = pygame.time.get_ticks()
 		if self.direction == -1:
-			return(Bullet(self.rect.center[0], self.rect.center[1], 10, 0, 1, RED))
+			return(Bullet(self.rect.center[0], self.rect.center[1], 10, 0, 1, DARK_GREEN))
 		else:
-			return(Bullet(self.rect.center[0], self.rect.center[1], 10, 0, 0, RED))
+			return(Bullet(self.rect.center[0], self.rect.center[1], 10, 0, 0, DARK_GREEN))
 
 		
 
@@ -225,11 +242,13 @@ class Bullet(pygame.sprite.Sprite):
         self.direction = direction
         self.speed = speed
         self.drop = drop
-        self.width = 25
-        self.height = 25
-        self.image = pygame.Surface([25,25])
+        self.width = 11
+        self.height = 11
+        self.image = pygame.Surface([11,11])
         self.image.fill((color))
         self.rect = self.image.get_rect(center =(pos_x, pos_y))
+        
+
     
     def update(self):
         
@@ -243,30 +262,73 @@ class Bullet(pygame.sprite.Sprite):
         for tile in world.obstacle_list:
             if tile[1].colliderect(self.rect.x, self.rect.y, self.width, self.height):
                 self.kill()
-#'''
+
 class Enemy(pygame.sprite.Sprite):
 
-	def __init__(self, alive,x,y,facing,shoot_interval, on_level):
+	def __init__(self, alive,x,y,facing,shoot_interval, on_level, char_type):
 		super().__init__()
+
+		self.char_type = char_type
+
 		self.alive = alive #will be true or false
-		self.image = pygame.Surface([50,50])
-		self.image.fill((255,255,255))
-		self.rect = self.image.get_rect(center = (x,y))
+		# self.image = pygame.Surface([50,50])
+		# self.image.fill((255,255,255))
+		# self.rect = self.image.get_rect(center = (x,y))
 		self.facing = facing
 		self.shoot_interval = shoot_interval
 		self.shoot_timer = 0
+		self.shooting = False
 		self.last_shot = 0
 		self.on_level = on_level
 		self.start_pos_x = x
 		self.start_pos_y = y
 
+		self.animation_list = []
+		self.frame_index = 0
+		self.action = 0
+		self.update_time = pygame.time.get_ticks()
+
+		animation_types = ['idle', 'idle reverse', 'not alive', 'not alive reverse']
+		for animation in animation_types:
+			temp_list = []
+			num_of_frames = len(os.listdir(f'img/{self.char_type}/{animation}'))
+			for i in range(num_of_frames):
+				img = pygame.image.load(f'img/{self.char_type}/{animation}/{i}.png').convert_alpha()
+				img = pygame.transform.scale(img, (int(img.get_width() * 1.65), int(img.get_height() * 1.65)))
+				temp_list.append(img)
+				print(temp_list)
+			self.animation_list.append(temp_list)
+
+		self.image = self.animation_list[self.action][self.frame_index]
+		#self.rect = self.image.get_rect()
+		self.rect = self.image.get_rect(topleft=(x, y))
+		self.rect.center = (x, y)
+		self.width = self.image.get_width()
+		self.height = self.image.get_height()
+
+	def update_animation(self):
+		ANIMATION_COOLDOWN = 100
+		self.image = self.animation_list[self.action][self.frame_index]
+		if pygame.time.get_ticks() - self.update_time > ANIMATION_COOLDOWN:
+			self.update_time = pygame.time.get_ticks()
+			self.frame_index += 1
+		if self.frame_index >= len(self.animation_list[self.action]):
+			if self.action == 3:
+				self.frame_index = len(self.animation_list[self.action]) - 1
+			else:
+				self.frame_index = 0
+
+	def update_action(self, new_action):
+		if new_action != self.action:
+			self.action = new_action
+			self.frame_index = 0
+			self.update_time = pygame.time.get_ticks()
+
 	def shoot(self):
 		
 		if self.facing == "left":
-
 			return(enemy_bullet_group.add(Bullet(self.rect.center[0], self.rect.center[1], 10, 0, 1, BLACK)))
 		else:
-
 			return(enemy_bullet_group.add(Bullet(self.rect.center[0], self.rect.center[1], 10, 0, 0, BLACK)))
 	
 	def hide_me(self):
@@ -279,23 +341,29 @@ class Enemy(pygame.sprite.Sprite):
 
 	
 	def update(self):
+		self.update_animation()
 		if pygame.sprite.spritecollide(self, player_bullet_group, True):
-			self.image.fill((255,10,10))
 			self.alive = False
 		if self.alive == True:
+			if self.facing == 'left':
+				self.update_action(1)
+			else:
+				self.update_action(0)
 			current_time = pygame.time.get_ticks()
 			self.shoot_timer += current_time - self.last_shot
 			if self.shoot_timer >= self.shoot_interval:
 				self.shoot()
 				self.shoot_timer = 0
 				self.last_shot = current_time
+		else:
+			if self.facing == 'left':
+				self.update_action(3)
+			else:
+				self.update_action(2)
 		if level == self.on_level:
 			self.show_me()
 		elif level != self.on_level:
 			self.hide_me()
-
-		
-	
 			
 
 
@@ -321,7 +389,7 @@ class World():
 					if tile >= 0 and tile <= 8:
 						self.obstacle_list.append(tile_data)
 					elif tile == 15:#create player
-						player = Soldier('player', x * TILE_SIZE, y * TILE_SIZE, 1.65, 4)
+						player = Soldier('player', x * TILE_SIZE, y * TILE_SIZE, 1.65, 4, GOING_UP)
 					elif tile == 20:#create exit
 						exit = Exit(img, x * TILE_SIZE, y * TILE_SIZE)
 						exit_group.add(exit)
@@ -352,10 +420,25 @@ exit_group = pygame.sprite.Group()
 player_bullet_group = pygame.sprite.Group()
 enemy_bullet_group = pygame.sprite.Group()
 enemy_group = pygame.sprite.Group()
+
 #enemy_group.add(Enemy(Alive, X, Y ,Facing,  Fire rate higher is slower, level))
-enemy_group.add(Enemy(True, 700, 550 ,"left", 100000, 1))
-enemy_group.add(Enemy(True, 40, 240 ,"right", 10000, 1))
-enemy_group.add(Enemy(True, 700, 550 ,"left", 1000, 2))
+enemy_group.add(Enemy(True, 700, 550 ,"left", 100000, 1, 'enemy'))
+enemy_group.add(Enemy(True, 40, 240 ,"right", 10000, 1, 'enemy'))
+
+enemy_group.add(Enemy(True, 700, 350 ,"left", 10000, 2, 'enemy'))
+
+enemy_group.add(Enemy(True, 700, 450 ,"left", 1000, 3, 'enemy'))
+
+enemy_group.add(Enemy(True, 700, 450 ,"left", 1000, 4, 'enemy'))
+
+enemy_group.add(Enemy(True, 50, 250 ,"right", 100000, 5, 'enemy'))
+enemy_group.add(Enemy(True, 700, 200 ,"left", 10000, 5, 'enemy'))
+enemy_group.add(Enemy(True, 50, 250 ,"right", 10000, 5, 'enemy'))
+enemy_group.add(Enemy(True, 700, 300 ,"left", 100000, 5, 'enemy'))
+enemy_group.add(Enemy(True, 50, 350 ,"right", 10000, 5, 'enemy'))
+enemy_group.add(Enemy(True, 700, 400 ,"left", 100000, 5, 'enemy'))
+enemy_group.add(Enemy(True, 50, 450 ,"right", 10000, 5, 'enemy'))
+
 
 
 #create empty tile list
@@ -380,6 +463,9 @@ while run:
 
 	clock.tick(FPS)
 
+	time_elapsed = pygame.time.get_ticks()
+
+
 	#update background
 	draw_bg()
 	#draw world map
@@ -397,23 +483,49 @@ while run:
 	enemy_bullet_group.draw(screen)
 	enemy_group.update()
 	enemy_group.draw(screen)
-	
-	
+
+	if time_elapsed - player.shoot_time < 200:
+		player.shooting = True
+	else:
+		player.shooting = False
 
 	if player.in_air:
 		player.update_action(2)
 	elif moving_left or moving_right:
 		player.update_action(1)
+	elif player.shooting == True:
+		player.update_action(3)
 	else:
 		player.update_action(0)
 	player.move(moving_left, moving_right)
+
 	
 
 	level_complete = player.move(moving_left, moving_right)
-	if level_complete:
+	
+	#MOVING UP 
+	if level_complete[0] == 2:
 				level += 1
 				world_data = reset_level()
 				if level <= MAX_LEVELS:
+					#load in level data and create world
+					GOING_UP = True
+					with open(f'level{level}_data.csv', newline='') as csvfile:
+						reader = csv.reader(csvfile, delimiter=',')
+						for x, row in enumerate(reader):
+							for y, tile in enumerate(row):
+								world_data[x][y] = int(tile)
+					world = World()
+					player = world.process_data(world_data)	
+					player.rect.x = level_complete[1]
+					player.rect.y = 500
+
+	#FALLING
+	elif level_complete[0] == 1: 
+				level -= 1
+				world_data = reset_level()
+				if level >= 0:
+					GOING_UP = False
 					#load in level data and create world
 					with open(f'level{level}_data.csv', newline='') as csvfile:
 						reader = csv.reader(csvfile, delimiter=',')
@@ -422,6 +534,8 @@ while run:
 								world_data[x][y] = int(tile)
 					world = World()
 					player = world.process_data(world_data)	
+					player.rect.y = 75
+					player.rect.x = level_complete[1]
 
 
 	for event in pygame.event.get():
