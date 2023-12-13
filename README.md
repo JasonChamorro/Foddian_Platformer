@@ -1,4 +1,3 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-24ddc0f5d75046c5622901739e7c5dd533143b0c8e959d652212380cedb1ea36.svg)](https://classroom.github.com/a/flyphEq-)
+Welcome to our Game! This is a foddian style platformer where the goal is to get to the top. The controls are WASD to move, and space bar to shoot. You can shoot and kill enemies, but they cannot kill you, only knock you back (sometimes this may be useful). Run the file levelGenTest.py to play the game (every other file is just images).
 
-Test: Jason
-Jacob I love you 
+Good luck!
