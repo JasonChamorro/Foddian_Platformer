@@ -422,20 +422,20 @@ enemy_group = pygame.sprite.Group()
 
 #enemy_group.add(Enemy(Alive, X, Y ,Facing,  Fire rate higher is slower, level))
 enemy_group.add(Enemy(True, 700, 550 ,"left", 100000, 1, 'enemy'))
-enemy_group.add(Enemy(True, 40, 240 ,"right", 10000, 1, 'enemy'))
+enemy_group.add(Enemy(True, 40, 230 ,"right", 10000, 1, 'enemy'))
 
 enemy_group.add(Enemy(True, 700, 350 ,"left", 10000, 2, 'enemy'))
 
-enemy_group.add(Enemy(True, 700, 450 ,"left", 1000, 3, 'enemy'))
+enemy_group.add(Enemy(True, 700, 470 ,"left", 1000, 3, 'enemy'))
 
-enemy_group.add(Enemy(True, 700, 450 ,"left", 1000, 4, 'enemy'))
+enemy_group.add(Enemy(True, 700, 430 ,"left", 1000, 4, 'enemy'))
 
-enemy_group.add(Enemy(True, 50, 250 ,"right", 100000, 5, 'enemy'))
-enemy_group.add(Enemy(True, 700, 200 ,"left", 10000, 5, 'enemy'))
-enemy_group.add(Enemy(True, 700, 300 ,"left", 100000, 5, 'enemy'))
+enemy_group.add(Enemy(True, 50, 270 ,"right", 100000, 5, 'enemy'))
+enemy_group.add(Enemy(True, 700, 230 ,"left", 10000, 5, 'enemy'))
+enemy_group.add(Enemy(True, 700, 310 ,"left", 100000, 5, 'enemy'))
 enemy_group.add(Enemy(True, 50, 350 ,"right", 10000, 5, 'enemy'))
-enemy_group.add(Enemy(True, 700, 400 ,"left", 100000, 5, 'enemy'))
-enemy_group.add(Enemy(True, 50, 450 ,"right", 10000, 5, 'enemy'))
+enemy_group.add(Enemy(True, 700, 430 ,"left", 100000, 5, 'enemy'))
+enemy_group.add(Enemy(True, 50, 470 ,"right", 10000, 5, 'enemy'))
 
 
 
